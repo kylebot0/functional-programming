@@ -1,0 +1,61 @@
+{
+  "name": "TOPICS",
+  "children": [
+    {
+      "name": "Topic A",
+      "count": 10,
+      "children": [
+        {
+          "name": "Sub A1",
+          "count": 4,
+          "children": [
+              {
+                "name": "SubSub AA1",
+                "count": 2,
+                "children": [
+                    {
+                        "name": "AAA2",
+                        "count": 2
+                    }
+                ]
+            }
+          ]
+        },
+        {
+          "name": "Sub A2",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "name": "Topic B",
+      "children": [
+        {
+          "name": "Sub B1",
+          "count": 3
+        },
+        {
+          "name": "Sub B2",
+          "count": 3
+        },
+        {
+          "name": "Sub B3",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "name": "Topic C",
+      "children": [
+        {
+          "name": "Sub A1",
+          "count": 4
+        },
+        {
+          "name": "Sub A2",
+          "count": 4
+        }
+      ]
+    }
+  ]
+}
