@@ -41,10 +41,11 @@ function changeJsonParent(results) {
 }
 
 function changeJsonChildren(broadArray) {
-  let data = [];
   console.log(broadArray);
-  let uri = broadArray[0].uri;
-  const queryNarrow = `
+//   for (let i = 0; i < 10; i++) {
+      console.log(i);
+    let uri = broadArray[0].children[i].uri;
+    const queryNarrow = `
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
         SELECT  ?materialNarrow2 ?materialLabel (COUNT(?materialLabel) AS ?countMaterialLabel) 
@@ -56,32 +57,34 @@ function changeJsonChildren(broadArray) {
         }ORDER BY DESC(?countMaterialLabel)
         LIMIT 3
 `;
-  return fetch(
-    url + "?query=" + encodeURIComponent(queryNarrow) + "&format=json"
-  )
-    .then(res => res.json())
-    .then(json => {
-      let childrenArray = json.results.bindings;
-      console.log(broadArray);
-      childrenArray.forEach(e => {
-        let currentObject = {
-          uri: e.materialNarrow2.value,
-          name: e.materialLabel.value,
-          value: e.countMaterialLabel.value
-        };
-        broadArray[0].children[0].children.push(currentObject);
+    return fetch(
+      url + "?query=" + encodeURIComponent(queryNarrow) + "&format=json"
+    )
+      .then(res => res.json())
+      .then(json => {
+        let childrenArray = json.results.bindings;
+        console.log(childrenArray);
+        childrenArray.forEach(e => {
+          let currentObject = {
+            uri: e.materialNarrow2.value,
+            name: e.materialLabel.value,
+            value: 20000
+          };
+          console.log(currentObject);
+          broadArray[0].children[i].children.push(currentObject);
+        });
+        console.log(broadArray);
+        return broadArray;
       });
-      console.log(broadArray);
-      return broadArray;
-    });
+//   }
 }
 
 runQuery(url, queryBroad);
 
 function makeSVG(nodeData) {
   console.log(nodeData);
-  const width = 500;
-  const height = 500;
+  const width = screen.width / 1.5;
+  const height = screen.height / 1.5;
   const radius = Math.min(width, height) / 2;
   const color = d3.scaleOrdinal(
     // d3.schemeSet3
@@ -134,11 +137,13 @@ function makeSVG(nodeData) {
     .attr("d", arc)
     .style("stroke", "#fff")
     .style("fill", d => {
+      // Krijg de kleur van parents of children
       return color((d.children ? d : d.parent).data.name);
     });
 
   g.selectAll(".node")
     .append("text")
+    .attr("class", "nodeText")
     .attr("transform", d => {
       return (
         "translate(" +
@@ -156,7 +161,7 @@ function makeSVG(nodeData) {
   function computeTextRotation(d) {
     let angle = ((d.x0 + d.x1) / Math.PI) * 90;
     // Avoid upside-down labels
-    return angle < 120 || angle > 270 ? angle : angle + 180; // labels as rims
+    // return angle < 120 || angle > 270 ? angle : angle + 180; // labels as rims
     return angle < 180 ? angle - 90 : angle + 90; // labels as spokes
   }
 }
