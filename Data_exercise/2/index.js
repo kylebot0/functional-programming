@@ -1,10 +1,10 @@
 const url =
   "https://api.data.netwerkdigitaalerfgoed.nl/datasets/ivo/NMVW/services/NMVW-30/sparql";
-const query = `
+const queryBroad = `
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-SELECT ?materialLabel (COUNT(?materialLabel) AS ?countMaterialLabel) 
+SELECT ?medium ?materialLabel (COUNT(?materialLabel) AS ?countMaterialLabel) 
 WHERE {
   ?cho dct:medium ?medium .
   ?medium skos:prefLabel ?materialLabel .
@@ -12,32 +12,80 @@ WHERE {
 LIMIT 10
         `;
 
-function runQuery(url, query) {
-     fetch(url + "?query=" + encodeURIComponent(query) + "&format=json")
-        .then(res => res.json())
-        .then(json => {
-            let results = json.results.bindings;
-            let newArray = [];
-            results.forEach(e => {
-                let currentObject = {
-                    name: e.materialLabel.value,
-                    value: e.countMaterialLabel.value
-                }
-                newArray.push(currentObject);
-            })
-           makeSVG(newArray)
-        })
-};  
-runQuery(url, query)
+function runQuery(url, queryBroad) {
+  fetch(url + "?query=" + encodeURIComponent(queryBroad) + "&format=json")
+    .then(res => res.json())
+    .then(json => {
+      return changeJsonParent(json.results.bindings);
+    })
+    .then(broadArray => {
+      return changeJsonChildren(broadArray);
+    })
+    .then(data => {
+      console.dir(data);
+      makeSVG(data);
+    });
+}
+function changeJsonParent(results) {
+  let newArray = [{ name: "Materials", children: [] }];
+  results.forEach(e => {
+    let currentObject = {
+      uri: e.medium.value,
+      name: e.materialLabel.value,
+      value: e.countMaterialLabel.value,
+      children: []
+    };
+    newArray[0].children.push(currentObject);
+  });
+  return newArray;
+}
+
+function changeJsonChildren(broadArray) {
+  let data = [];
+  console.log(broadArray);
+  let uri = broadArray[0].uri;
+  const queryNarrow = `
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+        SELECT  ?materialNarrow2 ?materialLabel (COUNT(?materialLabel) AS ?countMaterialLabel) 
+        WHERE {
+        VALUES ?term  {<${uri}>}
+        ?term skos:narrower ?materialNarrow .
+        ?materialNarrow skos:narrower ?materialNarrow2 .
+        ?materialNarrow2 skos:prefLabel ?materialLabel .
+        }ORDER BY DESC(?countMaterialLabel)
+        LIMIT 3
+`;
+  return fetch(
+    url + "?query=" + encodeURIComponent(queryNarrow) + "&format=json"
+  )
+    .then(res => res.json())
+    .then(json => {
+      let childrenArray = json.results.bindings;
+      console.log(broadArray);
+      childrenArray.forEach(e => {
+        let currentObject = {
+          uri: e.materialNarrow2.value,
+          name: e.materialLabel.value,
+          value: e.countMaterialLabel.value
+        };
+        broadArray[0].children[0].children.push(currentObject);
+      });
+      console.log(broadArray);
+      return broadArray;
+    });
+}
+
+runQuery(url, queryBroad);
 
 function makeSVG(nodeData) {
-    console.log(nodeData);
+  console.log(nodeData);
   const width = 500;
   const height = 500;
   const radius = Math.min(width, height) / 2;
   const color = d3.scaleOrdinal(
-      d3.schemeSet3
-    // d3.quantize(d3.interpolateRainbow, nodeData.children.length + 1)
+    // d3.schemeSet3
+    d3.quantize(d3.interpolateRainbow, nodeData[0].children.length + 1)
   );
 
   // Create primary <g> element
@@ -52,8 +100,8 @@ function makeSVG(nodeData) {
   const partition = d3.partition().size([2 * Math.PI, radius]);
 
   // Find data root
-  const root = d3.hierarchy(nodeData).sum(d => {
-          return d.value;
+  const root = d3.hierarchy(nodeData[0]).sum(d => {
+    return d.value;
   });
 
   // Size arcs
@@ -85,8 +133,8 @@ function makeSVG(nodeData) {
     })
     .attr("d", arc)
     .style("stroke", "#fff")
-    .style("fill",  d => {
-        return color((d.children ? d : d.parent).data.name);
+    .style("fill", d => {
+      return color((d.children ? d : d.parent).data.name);
     });
 
   g.selectAll(".node")
@@ -109,8 +157,6 @@ function makeSVG(nodeData) {
     let angle = ((d.x0 + d.x1) / Math.PI) * 90;
     // Avoid upside-down labels
     return angle < 120 || angle > 270 ? angle : angle + 180; // labels as rims
-    return (angle < 180) ? angle - 90 : angle + 90;  // labels as spokes
+    return angle < 180 ? angle - 90 : angle + 90; // labels as spokes
   }
-};
-
-
+}
