@@ -22,8 +22,12 @@ function runQuery(url, queryBroad) {
       return changeJsonChildren(broadArray);
     })
     .then(data => {
-      console.dir(data);
-      makeSVG(data);
+        
+        setTimeout(() => {
+            console.dir(data);
+            makeSVG(data);
+        }, 300);
+      
     });
 }
 function changeJsonParent(results) {
@@ -32,7 +36,7 @@ function changeJsonParent(results) {
     let currentObject = {
       uri: e.medium.value,
       name: e.materialLabel.value,
-      value: e.countMaterialLabel.value,
+    //   value: e.countMaterialLabel.value,
       children: []
     };
     newArray[0].children.push(currentObject);
@@ -42,41 +46,44 @@ function changeJsonParent(results) {
 
 function changeJsonChildren(broadArray) {
   console.log(broadArray);
-//   for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < broadArray[0].children.length; i++) {
     //   console.log(i);
-    let uri = broadArray[0].children[0].uri;
+    let uri = broadArray[0].children[i].uri;
     const queryNarrow = `
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-        SELECT  ?materialNarrow2 ?materialLabel (COUNT(?materialLabel) AS ?countMaterialLabel) 
+        SELECT  ?materialNarrow ?materialLabel (COUNT(?materialLabel) AS ?countMaterialLabel) 
         WHERE {
         VALUES ?term  {<${uri}>}
         ?term skos:narrower ?materialNarrow .
-        ?materialNarrow skos:narrower ?materialNarrow2 .
-        ?materialNarrow2 skos:prefLabel ?materialLabel .
+        #?materialNarrow skos:narrower ?materialNarrow2 .
+        ?materialNarrow skos:prefLabel ?materialLabel .
         }ORDER BY DESC(?countMaterialLabel)
-        LIMIT 3
+        LIMIT 100
 `;
-    return fetch(
+     fetch(
       url + "?query=" + encodeURIComponent(queryNarrow) + "&format=json"
     )
       .then(res => res.json())
       .then(json => {
         let childrenArray = json.results.bindings;
-        console.log(childrenArray);
         childrenArray.forEach(e => {
           let currentObject = {
-            uri: e.materialNarrow2.value,
+            uri: e.materialNarrow.value,
             name: e.materialLabel.value,
-            value: 20000
+            value: e.countMaterialLabel.value,
+            children: []
           };
-          console.log(currentObject);
-          broadArray[0].children[0].children.push(currentObject);
+          broadArray[0].children[i].children.push(currentObject);
         });
-        console.log(broadArray);
         return broadArray;
       });
-//   }
+      
+  }
+    return Promise.all(broadArray).then( ()=> {
+        console.log(broadArray)
+        return broadArray
+    });
 }
 
 runQuery(url, queryBroad);
@@ -87,8 +94,8 @@ function makeSVG(nodeData) {
   const height = screen.height / 1.5;
   const radius = Math.min(width, height) / 2;
   const color = d3.scaleOrdinal(
-    // d3.schemeSet3
-    d3.quantize(d3.interpolateRainbow, nodeData[0].children.length + 1)
+    d3.schemeSet3
+    // d3.quantize(d3.interpolateRainbow, nodeData[0].children.length + 1)
   );
 
   // Create primary <g> element
@@ -160,8 +167,6 @@ function makeSVG(nodeData) {
     });
   function computeTextRotation(d) {
     let angle = ((d.x0 + d.x1) / Math.PI) * 90;
-    // Avoid upside-down labels
-    // return angle < 120 || angle > 270 ? angle : angle + 180; // labels as rims
-    return angle < 180 ? angle - 90 : angle + 90; // labels as spokes
+    return angle < 200 ? angle - 90 : angle + 90; 
   }
 }
