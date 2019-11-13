@@ -43,8 +43,8 @@ function changeJsonParent(results) {
 function changeJsonChildren(broadArray) {
   console.log(broadArray);
 //   for (let i = 0; i < 10; i++) {
-      console.log(i);
-    let uri = broadArray[0].children[i].uri;
+    //   console.log(i);
+    let uri = broadArray[0].children[0].uri;
     const queryNarrow = `
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
@@ -71,7 +71,7 @@ function changeJsonChildren(broadArray) {
             value: 20000
           };
           console.log(currentObject);
-          broadArray[0].children[i].children.push(currentObject);
+          broadArray[0].children[0].children.push(currentObject);
         });
         console.log(broadArray);
         return broadArray;
