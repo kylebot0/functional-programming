@@ -9,7 +9,7 @@ WHERE {
   ?cho dct:medium ?medium .
   ?medium skos:prefLabel ?materialLabel .
 }ORDER BY DESC(?countMaterialLabel)
-LIMIT 10
+LIMIT 25
         `;
 
 function runQuery(url, queryBroad) {
@@ -19,7 +19,8 @@ function runQuery(url, queryBroad) {
       return changeJsonParent(json.results.bindings);
     })
     .then(broadArray => {
-      return changeJsonChildren(broadArray);
+       changeJsonChildren(broadArray);
+       return broadArray
     })
     .then(narrowArray => {
       setTimeout(() => {
@@ -31,7 +32,7 @@ function runQuery(url, queryBroad) {
       setTimeout(() => {
         console.dir(data);
         makeSVG(data);
-      }, 3000);
+      }, 2000);
     });
 }
 function changeJsonParent(results) {
@@ -113,7 +114,7 @@ function changeJsonChildren(broadArray) {
           let currentObject = {
             uri: e.materialNarrow.value,
             name: e.materialLabel.value,
-            value: e.countMaterialLabel.value,
+            // value: e.countMaterialLabel.value,
             children: []
           };
           broadArray[0].children[i].children.push(currentObject);
@@ -206,7 +207,7 @@ function makeSVG(nodeData) {
     .attr("transform", d => {
       return "translate(" + arc.centroid(d) + ")rotate(" + rotateText(d) + ")";
     })
-    .attr("dx", "-20")
+    .attr("dx", "-30")
     .attr("dy", ".5em")
     .text(d => {
       return d.parent ? d.data.name : "";
