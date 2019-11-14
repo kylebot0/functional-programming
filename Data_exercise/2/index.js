@@ -134,7 +134,10 @@ function makeSVG(nodeData) {
   const width = screen.width;
   const height = screen.height / 1.3 ;
   const radius = Math.min(width, height) / 2;
-  const color = d3.scaleOrdinal(d3.schemeSet3);
+  const color = d3.scaleOrdinal(
+    //   d3.schemeSet3
+      d3.quantize(d3.interpolateRainbow, nodeData[0].children.length + 1)
+      );
 
   // Create primary <g> element
   const g = d3
@@ -147,7 +150,7 @@ function makeSVG(nodeData) {
   // Data strucure
   const partition = d3.partition().size([2 * Math.PI, radius]);
 
-  // Find data root
+  // Find data root and sets hierarchy
   const root = d3.hierarchy(nodeData[0]).sum(d => {
     return d.value;
   });
@@ -186,7 +189,7 @@ function makeSVG(nodeData) {
     .style("stroke", "#fff")
     .style("fill", d => {
       // Krijg de kleur van parents of children
-      return color((d.children ? d : d.parent).data.name);
+        while (d.depth > 1) d = d.parent; return color(d.data.name);
     })
     .style("fill-opacity", 0.8)
     .on("mouseover", function() {
