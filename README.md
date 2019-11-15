@@ -1,5 +1,5 @@
 # Material and technique sunburst
-![preview](https://github.com/kylebot0/functional-programming/blob/master/Github_images/Schermafbeelding%202019-11-13%20om%2016.20.13.png)
+![preview](https://github.com/kylebot0/functional-programming/blob/master/Github_images/Schermafbeelding%202019-11-14%20om%2012.50.45.png)
 ## Table of Contents 🗃
 
 - [Live demo](#Live-demo)
@@ -17,7 +17,7 @@
   
 ## Live demo
 
-[You can find the demo here]. (https://functional--programming.herokuapp.com/)
+[You can find the demo here](https://kylebot0.github.io/functional-programming/)
 
 ## Concept
 
